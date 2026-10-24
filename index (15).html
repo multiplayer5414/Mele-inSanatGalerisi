@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeri</title>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("theme")||"dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
+<style>
+:root{
+  --bg:#0e0e10; --panel:#1c1c20; --tile:#26262b; --tile2:#2f2f35;
+  --text:#ffffff; --muted:#a8a8b3; --accent:#f5b83d; --on-accent:#111111;
+  --line:#3a3a42; --hdr:rgba(14,14,16,.92); --edge:transparent;
+}
+:root[data-theme="ocean"]{
+  --bg:#021f3d; --panel:rgba(255,255,255,.1); --tile:rgba(255,255,255,.12); --tile2:rgba(255,255,255,.22);
+  --text:#ffffff; --muted:#cfeaf7; --accent:#7fe0f0; --on-accent:#04233f;
+  --line:rgba(255,255,255,.25); --hdr:rgba(4,52,90,.88); --edge:rgba(255,255,255,.28);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Üst menü */
+header{position:sticky;top:0;z-index:10;background:var(--hdr);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{font-size:22px;font-weight:800;color:var(--accent);text-decoration:none;letter-spacing:.5px}
+nav{display:flex;gap:8px}
+nav button{background:none;border:0;padding:10px 16px;border-radius:8px;color:#c9c9d1;font-size:15px}
+nav button:hover{color:#fff;background:var(--panel)}
+nav button[aria-current="page"]{color:var(--on-accent);background:var(--accent);font-weight:700}
+
+main{max-width:1200px;margin:0 auto;padding:28px 24px 64px}
+section[hidden]{display:none}
+
+/* Vitrin */
+.hero{display:grid;grid-template-columns:3fr 1fr;gap:16px;min-height:380px;margin-bottom:28px}
+.hero-main{position:relative;border-radius:14px;overflow:hidden;background:var(--tile);display:flex;align-items:flex-end;padding:28px;border:0;text-align:left;width:100%}
+.hero-main img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-main h1{position:relative;margin:0;font-size:clamp(32px,5vw,52px);line-height:1.05;text-shadow:0 2px 16px rgba(0,0,0,.7)}
+.hero-side{display:flex;flex-direction:column;gap:16px}
+.hero-side button{flex:1;border:0;border-radius:14px;overflow:hidden;background:var(--panel);padding:0;position:relative}
+.hero-side img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Kategoriler */
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.chip{border:0;background:var(--tile);padding:10px 20px;border-radius:999px;font-size:15px}
+.chip:hover{background:var(--tile2)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+.count{color:var(--muted);font-size:14px;margin:0 0 16px}
+
+/* Galeri ızgarası */
+.grid{columns:4 240px;column-gap:16px}
+.card{display:block;width:100%;break-inside:avoid;margin:0 0 16px;border:0;padding:0;background:var(--tile);border-radius:12px;overflow:hidden;position:relative;text-align:left}
+.card:hover{background:var(--tile2)}
+.card img{display:block;width:100%;height:auto}
+.ph{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;padding:12px}
+.card .tag{position:absolute;left:10px;bottom:10px;background:rgba(14,14,16,.82);padding:4px 10px;border-radius:999px;font-size:13px}
+.evil .tag{background:#7a1020}
+.empty{color:var(--muted);padding:40px 0}
+
+/* Ön izleme */
+#lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:24px}
+#lb[hidden]{display:none}
+#lb figure{margin:0;max-width:min(1100px,100%);text-align:center}
+#lb img{max-width:100%;max-height:78vh;border-radius:8px}
+#lb .ph{width:min(640px,86vw);height:60vh;background:var(--tile);border-radius:8px}
+#lb figcaption{margin-top:12px;color:var(--muted)}
+.lb-btn{position:absolute;background:var(--panel);border:0;width:48px;height:48px;border-radius:50%;font-size:22px}
+.lb-btn:hover{background:var(--tile2)}
+#lbClose{top:20px;right:20px}#lbPrev{left:20px;top:50%}#lbNext{right:20px;top:50%}
+
+/* Tier list */
+.tier-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.tier-head h2{margin:0;font-size:28px}
+.hint{color:var(--muted);margin:0 0 20px;font-size:14px}
+.btn{border:0;background:var(--tile);padding:10px 18px;border-radius:8px;font-size:14px}
+.btn:hover{background:var(--tile2)}
+.tier{display:flex;gap:2px;margin-bottom:8px;border-radius:10px;overflow:hidden;background:var(--panel)}
+.tier-label{width:76px;flex:none;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#111}
+.drop{flex:1;min-height:92px;display:flex;flex-wrap:wrap;gap:6px;padding:6px;align-content:flex-start}
+.drop.over{background:var(--tile2)}
+.pool-wrap{margin-top:24px;background:var(--panel);border-radius:10px;padding:10px}
+.pool-wrap h3{margin:4px 6px 8px;font-size:15px;color:var(--muted);font-weight:600}
+.pool{min-height:92px}
+.chip-img{width:80px;height:80px;border-radius:8px;overflow:hidden;background:var(--tile);border:2px solid transparent;padding:0;flex:none;position:relative}
+.chip-img img{width:100%;height:100%;object-fit:cover;display:block}
+.chip-img.sel{border-color:var(--accent)}
+.chip-img .ph{width:100%;height:100%;font-size:11px;padding:4px}
+
+footer{text-align:center;color:var(--muted);font-size:13px;padding:24px}
+
+
+/* Temalar */
+.card,.hero-main,.hero-side button,.chip,.btn,.pool-wrap,.tier{border:1px solid var(--edge)}
+.themes{display:flex;gap:4px;background:var(--panel);padding:4px;border-radius:999px;border:1px solid var(--edge)}
+.themes button{background:none;border:0;padding:7px 14px;border-radius:999px;font-size:13px;color:var(--muted)}
+.themes button:hover{color:var(--text)}
+.themes button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+main,footer{position:relative;z-index:1}
+html[data-theme="ocean"] body{background:linear-gradient(180deg,#074a73 0%,#04345a 30%,#021f3d 65%,#010c1c 100%) fixed}
+.fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:none}
+html[data-theme="ocean"] .fx{display:block}
+.ray{position:absolute;top:0;height:60vh;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.1) 50%,transparent 70%);transform:skewX(-14deg)}
+.b{position:absolute;bottom:-70px;left:var(--x);width:var(--s);height:var(--s);border-radius:50%;
+  border:1.5px solid rgba(207,234,247,.5);
+  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.55),rgba(255,255,255,.08) 40%,transparent 70%);
+  animation:rise var(--d) linear var(--t) infinite}
+@keyframes rise{0%{transform:translate(0,0)}50%{transform:translate(16px,-60vh)}100%{transform:translate(-8px,-115vh)}}
+@media (prefers-reduced-motion:reduce){.b{animation:none;bottom:var(--y)}}
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr;min-height:0}
+  .hero-main{min-height:260px}
+  .hero-side{flex-direction:row;height:120px}
+  .tier-label{width:56px;font-size:22px}
+  .chip-img{width:64px;height:64px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="fx" id="fx" aria-hidden="true"><div class="ray" style="left:10%;width:20vw"></div><div class="ray" style="left:62%;width:14vw"></div></div>
+
+<header>
+  <div class="bar">
+    <a class="logo" href="#galeri" id="siteTitle">GALERİ</a>
+    <nav aria-label="Ana menü">
+      <button data-view="galeri" aria-current="page">Galeri</button>
+      <button data-view="tier">Tier List</button>
+    </nav>
+    <div class="themes" role="group" aria-label="Tema">
+      <button data-theme-btn="dark" aria-pressed="true">Koyu</button>
+      <button data-theme-btn="ocean" aria-pressed="false">Su Altı</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- GALERİ -->
+  <section id="view-galeri" aria-label="Galeri">
+    <div class="hero" id="hero"></div>
+    <div class="chips" id="chips" role="group" aria-label="Kategoriler"></div>
+    <p class="count" id="count"></p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- TIER LIST -->
+  <section id="view-tier" aria-label="Tier List" hidden>
+    <div class="tier-head">
+      <h2>Tier List</h2>
+      <button class="btn" id="resetTier">Sıfırla</button>
+    </div>
+    <p class="hint">Bir resmi sürükleyip satıra bırak. Telefonda: resme dokun, sonra satıra dokun.</p>
+    <div id="tiers"></div>
+    <div class="pool-wrap">
+      <h3>Henüz sıralanmayanlar</h3>
+      <div class="drop pool" id="pool" data-zone="pool"></div>
+    </div>
+  </section>
+</main>
+
+<footer>© <span id="year"></span></footer>
+
+<!-- Büyütülmüş resim -->
+<div id="lb" hidden role="dialog" aria-modal="true" aria-label="Resim önizleme">
+  <button class="lb-btn" id="lbClose" aria-label="Kapat">✕</button>
+  <button class="lb-btn" id="lbPrev" aria-label="Önceki">‹</button>
+  <button class="lb-btn" id="lbNext" aria-label="Sonraki">›</button>
+  <figure id="lbFig"></figure>
+</div>
+
+<script>
+/* =====================================================
+   AYARLAR — Burayı kendin düzenle
+   -----------------------------------------------------
+   Resimlerini "images" klasörüne koy, sonra aşağıdaki
+   listeye bir satır ekle:
+
+   { src: "images/ornek.png", category: "Karakterler", title: "İsim" },
+
+   category şunlardan biri olmalı: Karakterler, Karışık, Evil
+   Liste boşken siteye örnek boş kutular gelir.
+   ===================================================== */
+const SITE_TITLE = "GALERİ";
+const CATEGORIES = ["Karakterler", "Karışık", "Evil"];
+const IMAGES = [
+  { src: "images/peralta.jpg",   category: "Karakterler", title: "Peralta" },
+  { src: "images/zoro.jpg",      category: "Karakterler", title: "Zoro" },
+  { src: "images/sungerbob.jpg", category: "Karakterler", title: "Sünger Bob" },
+  { src: "images/sam-dean.jpg",  category: "Karakterler", title: "Sam & Dean" },
+  { src: "images/kasli-genc.jpg",category: "Karışık",     title: "Kaslı Genç" },
+  { src: "images/streetsel.jpg", category: "Karışık",     title: "Streetsel" },
+  { src: "images/birlikte.jpg",  category: "Evil",        title: "Birlikte" },
+  { src: "images/baykus.jpg",    category: "Evil",        title: "Baykuş" },
+];
+const TIERS = [
+  { id: "S", color: "#ff6b6b" },
+  { id: "A", color: "#ffb347" },
+  { id: "B", color: "#ffe066" },
+  { id: "C", color: "#7bd88f" },
+  { id: "D", color: "#7cc4f5" },
+];
+/* ===================================================== */
+
+// Resim yoksa örnek boş kutular göster
+const items = IMAGES.length ? IMAGES.map((x, i) => ({ ...x, id: i })) :
+  Array.from({ length: 12 }, (_, i) => ({
+    id: i, src: "", category: CATEGORIES[i % CATEGORIES.length], title: "Resim " + (i + 1),
+    h: [260, 180, 320, 220][i % 4]
+  }));
+
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
+
+document.title = SITE_TITLE;
+$("#siteTitle").textContent = SITE_TITLE;
+$("#year").textContent = new Date().getFullYear();
+
+function thumb(item, withHeight) {
+  if (item.src) {
+    const img = el("img"); img.src = item.src; img.alt = item.title || ""; img.loading = "lazy"; return img;
+  }
+  const p = el("div", "ph", item.title);
+  if (withHeight) p.style.height = (item.h || 220) + "px";
+  return p;
+}
+
+/* ---------- Görünüm değiştirme ---------- */
+function show(view) {
+  $("#view-galeri").hidden = view !== "galeri";
+  $("#view-tier").hidden = view !== "tier";
+  document.querySelectorAll("nav button").forEach(b =>
+    b.toggleAttribute("aria-current", b.dataset.view === view));
+  document.querySelectorAll("nav button").forEach(b => {
+    if (b.dataset.view === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  history.replaceState(null, "", view === "tier" ? "#tier" : "#galeri");
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => show(b.dataset.view));
+$("#siteTitle").onclick = (e) => { e.preventDefault(); show("galeri"); };
+
+/* ---------- Galeri ---------- */
+let active = "Tümü";
+let visible = [];
+
+function renderHero() {
+  const hero = $("#hero"); hero.textContent = "";
+  const main = el("button", "hero-main");
+  main.setAttribute("aria-label", "Öne çıkan resmi aç");
+  if (items[0].src) { const i = el("img"); i.src = items[0].src; i.alt = ""; main.appendChild(i); }
+  main.appendChild(el("h1", "", SITE_TITLE === "GALERİ" ? "Resimlerim" : SITE_TITLE));
+  main.onclick = () => openLb(items[0].id);
+  hero.appendChild(main);
+  const side = el("div", "hero-side");
+  [items[1], items[2]].forEach(it => {
+    if (!it) return;
+    const b = el("button"); b.setAttribute("aria-label", it.title || "Resim");
+    if (it.src) b.appendChild(thumb(it)); else b.style.background = "var(--tile2)";
+    b.onclick = () => openLb(it.id);
+    side.appendChild(b);
+  });
+  hero.appendChild(side);
+}
+
+function renderChips() {
+  const box = $("#chips"); box.textContent = "";
+  ["Tümü", ...CATEGORIES].forEach(c => {
+    const b = el("button", "chip", c);
+    b.setAttribute("aria-pressed", String(c === active));
+    b.onclick = () => { active = c; renderChips(); renderGrid(); };
+    box.appendChild(b);
+  });
+}
+
+function renderGrid() {
+  const grid = $("#grid"); grid.textContent = "";
+  visible = items.filter(i => active === "Tümü" || i.category === active);
+  $("#count").textContent = visible.length + " resim";
+  if (!visible.length) { grid.appendChild(el("p", "empty", "Bu kategoride henüz resim yok.")); return; }
+  visible.forEach(it => {
+    const b = el("button", "card" + (it.category === "Evil" ? " evil" : ""));
+    b.setAttribute("aria-label", (it.title || "Resim") + " – büyüt");
+    b.appendChild(thumb(it, true));
+    b.appendChild(el("span", "tag", it.category));
+    b.onclick = () => openLb(it.id);
+    grid.appendChild(b);
+  });
+}
+
+/* ---------- Büyütme ---------- */
+let lbIndex = 0;
+function openLb(id) {
+  const list = visible.some(v => v.id === id) ? visible : items;
+  if (list !== visible) visible = items;
+  lbIndex = visible.findIndex(v => v.id === id);
+  drawLb(); $("#lb").hidden = false; $("#lbClose").focus();
+}
+function drawLb() {
+  const it = visible[lbIndex], fig = $("#lbFig"); fig.textContent = "";
+  const t = thumb(it); if (!it.src) t.className = "ph";
+  fig.appendChild(t);
+  fig.appendChild(el("figcaption", "", (it.title ? it.title + " · " : "") + it.category));
+}
+function stepLb(d) { lbIndex = (lbIndex + d + visible.length) % visible.length; drawLb(); }
+function closeLb() { $("#lb").hidden = true; }
+$("#lbClose").onclick = closeLb;
+$("#lbPrev").onclick = () => stepLb(-1);
+$("#lbNext").onclick = () => stepLb(1);
+$("#lb").onclick = (e) => { if (e.target.id === "lb") closeLb(); };
+document.addEventListener("keydown", (e) => {
+  if ($("#lb").hidden) return;
+  if (e.key === "Escape") closeLb();
+  if (e.key === "ArrowLeft") stepLb(-1);
+  if (e.key === "ArrowRight") stepLb(1);
+});
+
+/* ---------- Tier List ---------- */
+const KEY = "tier-list-v1";
+let state = {};
+function loadState() {
+  try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { state = {}; }
+  const ids = new Set(items.map(i => i.id));
+  const fresh = {};
+  TIERS.forEach(t => fresh[t.id] = (state[t.id] || []).filter(id => ids.has(id)));
+  const placed = new Set(Object.values(fresh).flat());
+  fresh.pool = items.map(i => i.id).filter(id => !placed.has(id));
+  state = fresh;
+}
+function saveState() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+let selected = null;
+function moveTo(id, zone) {
+  Object.keys(state).forEach(z => state[z] = state[z].filter(x => x !== id));
+  state[zone].push(id);
+  selected = null; saveState(); renderTier();
+}
+
+function makeChip(id) {
+  const it = items.find(i => i.id === id);
+  const b = el("button", "chip-img" + (selected === id ? " sel" : ""));
+  b.draggable = true; b.setAttribute("aria-label", it.title || "Resim");
+  b.appendChild(thumb(it));
+  b.ondragstart = (e) => { e.dataTransfer.setData("text/plain", String(id)); e.dataTransfer.effectAllowed = "move"; };
+  b.onclick = (e) => { e.stopPropagation(); selected = selected === id ? null : id; renderTier(); };
+  return b;
+}
+
+function wireDrop(zoneEl, zone) {
+  zoneEl.ondragover = (e) => { e.preventDefault(); zoneEl.classList.add("over"); };
+  zoneEl.ondragleave = () => zoneEl.classList.remove("over");
+  zoneEl.ondrop = (e) => {
+    e.preventDefault(); zoneEl.classList.remove("over");
+    const id = Number(e.dataTransfer.getData("text/plain"));
+    if (!isNaN(id)) moveTo(id, zone);
+  };
+  zoneEl.onclick = () => { if (selected !== null) moveTo(selected, zone); };
+}
+
+function renderTier() {
+  const box = $("#tiers"); box.textContent = "";
+  TIERS.forEach(t => {
+    const row = el("div", "tier");
+    const lab = el("div", "tier-label", t.id); lab.style.background = t.color;
+    const drop = el("div", "drop"); drop.dataset.zone = t.id;
+    state[t.id].forEach(id => drop.appendChild(makeChip(id)));
+    wireDrop(drop, t.id);
+    row.append(lab, drop); box.appendChild(row);
+  });
+  const pool = $("#pool"); pool.textContent = "";
+  state.pool.forEach(id => pool.appendChild(makeChip(id)));
+  wireDrop(pool, "pool");
+}
+$("#resetTier").onclick = () => {
+  if (!confirm("Tier list sıfırlansın mı?")) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  loadState(); renderTier();
+};
+
+/* ---------- Tema ---------- */
+function setTheme(t) {
+  if (t !== "dark" && t !== "ocean") t = "dark";
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("theme", t); } catch (e) {}
+  document.querySelectorAll("[data-theme-btn]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.themeBtn === t)));
+}
+document.querySelectorAll("[data-theme-btn]").forEach(b => b.onclick = () => setTheme(b.dataset.themeBtn));
+(function makeBubbles() {
+  const fx = $("#fx");
+  const xs = [4, 9, 15, 22, 30, 37, 44, 51, 58, 64, 71, 78, 84, 90, 95, 12, 48, 75];
+  xs.forEach((x, i) => {
+    const b = el("span", "b");
+    const size = 10 + ((i * 17) % 38);
+    b.style.cssText = "--x:" + x + "%;--s:" + size + "px;--d:" + (14 + (i * 5) % 14) + "s;--t:-" + ((i * 3) % 16) + "s;--y:" + (8 + (i * 13) % 80) + "%";
+    fx.appendChild(b);
+  });
+})();
+setTheme(document.documentElement.dataset.theme);
+
+/* ---------- Başlat ---------- */
+renderHero(); renderChips(); renderGrid();
+loadState(); renderTier();
+show(location.hash === "#tier" ? "tier" : "galeri");
+</script>
+</body>
+</html>
